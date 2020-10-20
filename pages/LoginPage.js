@@ -3,7 +3,7 @@ import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
 import auth from "@react-native-firebase/auth";
 import { useRecoilState } from "recoil";
 import { userState } from "../recoil/atoms";
-
+import AsyncStorage from "@react-native-community/async-storage";
 import {
   Label,
   Header,
@@ -30,11 +30,6 @@ const LoginPage = ({ history }) => {
   return (
     <View>
       <Header>
-        <Left>
-          <Button transparent>
-            <Icon type="FontAwesome" name="bars" />
-          </Button>
-        </Left>
         <Body>
           <Title>CLister</Title>
         </Body>
@@ -71,6 +66,7 @@ const LoginPage = ({ history }) => {
             full
             onPress={async () => {
               setLoading(true);
+              await AsyncStorage.removeItem("@list");
               await auth()
                 .signInWithEmailAndPassword(email, password)
                 .then(({ user }) => {
@@ -78,7 +74,6 @@ const LoginPage = ({ history }) => {
                   const { uid } = user;
                   console.log(uid);
                   setCurrentUser(uid);
-
                 })
                 .catch((error) => {
                   setLoading(false);

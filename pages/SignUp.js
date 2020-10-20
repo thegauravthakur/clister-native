@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
-import auth from "@react-native-firebase/auth";
 import { useRecoilState } from "recoil";
 import { userState } from "../recoil/atoms";
 import { Redirect } from "react-router-native";
-import firestore from "@react-native-firebase/firestore";
 import {
   Body,
   Button,
@@ -18,6 +16,7 @@ import {
   Title,
   Toast,
 } from "native-base";
+import Axios from "axios";
 
 const SignUp = ({ history }) => {
   const [email, setEmail] = useState();
@@ -70,39 +69,46 @@ const SignUp = ({ history }) => {
         ) : (
           <Button
             full
-            onPress={async () => {
+            onPress={() => {
               setLoading(true);
-              await auth()
-                .createUserWithEmailAndPassword(email, password)
-                .then(async ({ user }) => {
-                  const { uid } = user;
-                  await firestore()
-                    .collection(uid)
-                    .doc("default")
-                    .set({ task: [] })
-                    .then(() => {
-                      setCurrentUser(uid);
-                      setLoading(false);
-                      console.log(uid);
-                    });
-                })
-                .catch((error) => {
+              let randomFixedInteger = function (length) {
+                return Math.floor(
+                  Math.pow(10, length - 1) +
+                    Math.random() *
+                      (Math.pow(10, length) - Math.pow(10, length - 1) - 1)
+                );
+              };
+              let otp = randomFixedInteger(6);
+              let options = {
+                method: "POST",
+                url: "https://rapidapi.p.rapidapi.com/mail/send",
+                headers: {
+                  "content-type": "application/json",
+                  "x-rapidapi-host": "rapidprod-sendgrid-v1.p.rapidapi.com",
+                  "x-rapidapi-key":
+                    "5b2c629feemsh19321dfe48d26c8p157e05jsne14663bbb608",
+                },
+                data: {
+                  personalizations: [
+                    { to: [{ email: email }], subject: "Verify your email!" },
+                  ],
+                  from: { email: "no_reply@clister.tech" },
+                  content: [{ type: "text/plain", value: `you otp is ${otp}` }],
+                },
+              };
+
+              Axios.request(options)
+                .then(function (response) {
                   setLoading(false);
-                  switch (error.code) {
-                    case "auth/email-already-in-use":
-                      Toast.show({
-                        text: "Email already in use",
-                        buttonText: "Okay",
-                        type: "danger",
-                      });
-                      break;
-                    default:
-                      Toast.show({
-                        text: error.code,
-                        buttonText: "Okay",
-                        type: "danger",
-                      });
-                  }
+                  history.push({
+                    pathname: "/verifyUser",
+                    state: { email, password, otp },
+                  });
+                  console.log("OTP SENT");
+                })
+                .catch(function (error) {
+                  setLoading(false);
+                  console.error(error);
                 });
             }}
           >

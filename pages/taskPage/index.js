@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions } from "react-native";
 import { Redirect } from "react-router-native";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { currentListState, userState } from "../../recoil/atoms";
-import firestore, { firebase } from "@react-native-firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import CustomHeader from "./components/CustomHeader";
 import CustomActionButton from "./components/CustomActionButton";
 import CustomRbSheet from "./components/CustomRBSheet";
@@ -11,18 +11,8 @@ import CustomCard from "./components/CustomCard";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import Dialog from "react-native-dialog";
-import {
-  List,
-  ListItem,
-  Text,
-  Icon,
-  Right,
-  Left,
-  Content,
-  CardItem,
-  Card,
-  Body,
-} from "native-base";
+import AsyncStorage from "@react-native-community/async-storage";
+import { List, ListItem, Text, Icon, Right, Left, Card } from "native-base";
 
 const Index = () => {
   const Drawer = createDrawerNavigator();
@@ -50,18 +40,13 @@ const CustomDrawer = ({ navigation }) => {
   const [documents, setDocuments] = useState([]);
   const inputRef = useRef();
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-    const ref = firestore()
-      .collection(currentUser)
-      .orderBy(firestore.FieldPath.documentId(), "asc");
+    const ref = firestore().collection(currentUser);
     ref.onSnapshot((data) => {
       let temp = [];
       data.docs.forEach((d) => temp.push(d["id"]));
       setDocuments(temp);
     });
-  }, [inputRef]);
+  }, []);
   return (
     <View>
       <Dialog.Container visible={dialog}>
@@ -138,14 +123,24 @@ const CustomDrawer = ({ navigation }) => {
               <Right>
                 <Icon
                   onPress={async () => {
-                    let temp = [...documents];
-                    temp.splice(index, 1);
-                    setCurrentList("default");
-                    setDocuments(temp);
-                    await firestore()
-                      .collection(currentUser)
-                      .doc(document)
-                      .delete();
+                    try {
+                      let temp = [...documents];
+                      temp.splice(index, 1);
+                      setCurrentList("default");
+                      setDocuments(temp);
+                      await firestore()
+                        .collection(currentUser)
+                        .doc(document)
+                        .delete();
+                      const value = await AsyncStorage.getItem("@list");
+                      if (value !== null) {
+                        if (value === document) {
+                          await AsyncStorage.setItem("@list", "default");
+                        }
+                      }
+                    } catch (e) {
+                      // error reading value
+                    }
                   }}
                   style={{ fontSize: 22, color: "#3F51B5" }}
                   type="MaterialIcons"
@@ -199,8 +194,9 @@ const TaskPage = ({ navigation }) => {
           style={{
             textAlign: "center",
             fontWeight: "bold",
-            fontSize: 45,
+            fontSize: 35,
             color: "teal",
+            marginVertical: 12,
           }}
         >
           {listName}

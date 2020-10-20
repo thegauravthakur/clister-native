@@ -12,12 +12,29 @@ const CustomCard = ({ task, index, tasks, setTasks }) => {
     <Card>
       <CardItem>
         <Body>
-          <View style={{ flexDirection: "row" }}>
-            <View style={{ flexDirection: "row", flex: 11 }}>
-              <Text style={{ flex: 1, fontWeight: "bold", color: "teal" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginVertical: 10,
+            }}
+          >
+            <View
+              style={{ flexDirection: "row", flex: 11, alignItems: "center" }}
+            >
+              <Text
+                style={{
+                  flex: 1,
+                  fontWeight: "bold",
+                  color: "teal",
+                  fontSize: 18,
+                }}
+              >
                 {index + 1}
               </Text>
-              <Text style={{ flex: 11 }}>{task}</Text>
+              <Text style={{ flex: 11, fontSize: 16, fontWeight: "normal" }}>
+                {task}
+              </Text>
             </View>
             <Ripple
               rippleSize={100}

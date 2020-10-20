@@ -1,5 +1,6 @@
 import React from "react";
-import { Dimensions, StatusBar, Text, TextInput, View } from "react-native";
+import { Dimensions, StatusBar, Text, View } from "react-native";
+import AsyncStorage from "@react-native-community/async-storage";
 import { Button, Input, Item, Label } from "native-base";
 import firestore from "@react-native-firebase/firestore";
 import RBSheet from "react-native-raw-bottom-sheet";
@@ -43,13 +44,18 @@ const CustomRbSheet = ({
             console.log(height);
           }}
         >
-          <Item style={{}} floatingLabel>
+          <Item style={{ marginBottom: 10 }} floatingLabel>
             <Label>Enter a new item</Label>
             <Input value={task} onChangeText={(text) => setTask(text)} />
           </Item>
           <Button
             full
             onPress={async () => {
+              try {
+                await AsyncStorage.setItem("@list", currentList);
+              } catch (e) {
+                console.log(e);
+              }
               let temp = [...tasks, task];
               setTasks(temp);
               setTask("");
